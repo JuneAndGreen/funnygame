@@ -3,11 +3,11 @@ body {
 	background: -webkit-gradient(linear, left top, left bottom, from(#FF6), to(#FFF));
 	margin:10px;
 }
-.table {
-	position:absolute;
-	left:500px;
-	top:20px;
-}
+/* .table {
+  position:absolute;
+  left:500px;
+  top:20px;
+} */
 #canvas {
-	background-image:url(../image/bg.jpg);
+	background-image:url(./image/bg.jpg);
 }

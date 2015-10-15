@@ -1,1 +1,1 @@
-webpack js/index.js index.js
+webpack src/index.js index.js
