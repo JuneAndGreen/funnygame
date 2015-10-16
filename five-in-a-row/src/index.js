@@ -5,7 +5,12 @@ var calcMoney = require('./money.js');
 var chooseWhere = require('./calc.js');
 
 draw.paintTable();
-document.querySelector('#canvas').onmousedown = function(event) {
+(function() {
+  var canvas = window.cache.canvas;
+  window.cache.offsetX = canvas.offsetLeft - (canvas.clientWidth/2);
+})();
+
+window.cache.canvas.onmousedown = function(event) {
   event = event || window.event;
 
   var cache = window.cache;
@@ -14,8 +19,8 @@ document.querySelector('#canvas').onmousedown = function(event) {
   var bm = cache.bm;
   var bm2 = cache.bm2;
 
-  var x=parseInt((event.clientX-20)/40);
-  var y=parseInt((event.clientY-20)/40);
+  var x=parseInt((event.pageX - 20 - cache.offsetX)/40);
+  var y=parseInt((event.pageY - 20)/40);
   var winjudge;
 
   if(!cache.isblack) return; // 如果不是轮到黑子下则返回

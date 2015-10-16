@@ -51,7 +51,12 @@
 	var chooseWhere = __webpack_require__(5);
 
 	draw.paintTable();
-	document.querySelector('#canvas').onmousedown = function(event) {
+	(function() {
+	  var canvas = window.cache.canvas;
+	  window.cache.offsetX = canvas.offsetLeft - (canvas.clientWidth/2);
+	})();
+
+	window.cache.canvas.onmousedown = function(event) {
 	  event = event || window.event;
 
 	  var cache = window.cache;
@@ -60,8 +65,8 @@
 	  var bm = cache.bm;
 	  var bm2 = cache.bm2;
 
-	  var x=parseInt((event.clientX-20)/40);
-	  var y=parseInt((event.clientY-20)/40);
+	  var x=parseInt((event.pageX - 20 - cache.offsetX)/40);
+	  var y=parseInt((event.pageY - 20)/40);
 	  var winjudge;
 
 	  if(!cache.isblack) return; // 如果不是轮到黑子下则返回
@@ -127,7 +132,8 @@
 		window.cache = window.cache || {};
 		window.cache.data = window.cache.data || {};
 		// 棋盘
-		window.cache.table = document.querySelector('#canvas').getContext('2d'); 
+		window.cache.canvas = document.querySelector('#canvas');
+		window.cache.table = window.cache.canvas.getContext('2d'); 
 		// 15*15的二维数组用来保存棋盘信息，0为无子，1为黑子，2为白子
 		window.cache.chessValue = new Array(15);
 		for(var i=0; i<15; i++) {

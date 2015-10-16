@@ -2,7 +2,8 @@ module.exports = (function() {
 	window.cache = window.cache || {};
 	window.cache.data = window.cache.data || {};
 	// 棋盘
-	window.cache.table = document.querySelector('#canvas').getContext('2d'); 
+	window.cache.canvas = document.querySelector('#canvas');
+	window.cache.table = window.cache.canvas.getContext('2d'); 
 	// 15*15的二维数组用来保存棋盘信息，0为无子，1为黑子，2为白子
 	window.cache.chessValue = new Array(15);
 	for(var i=0; i<15; i++) {
