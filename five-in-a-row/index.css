@@ -2,9 +2,6 @@ body {
 	padding: 0;
 	margin: 0;
 }
-.cnt{
-	position: relative;
-}
 #canvas {
 	position: absolute;
 	left: 50%;
