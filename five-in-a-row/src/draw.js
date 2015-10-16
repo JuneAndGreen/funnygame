@@ -1,7 +1,6 @@
 /* 绘制棋盘和棋子 */
 
 var draw = {};
-window.cache = window.cache || {};
 
 /* 绘制棋盘 */
 draw.paintTable = (function() {
@@ -26,8 +25,7 @@ draw.paintTable = (function() {
     context.stroke();
   };
   return function() {
-    var context = document.querySelector('#canvas').getContext('2d');
-    window.cache.table = context;
+    var context = window.cache.table;
     
     for(var i=0; i<=640; i+=40) {
       drawLine(context, 'row', i);
@@ -40,16 +38,17 @@ draw.paintTable = (function() {
 /* flag为1表示黑字，flag为2表示白子 */
 draw.drawChess = function(flag, x, y) {
   var cache = window.cache;
-  context = cache.table;
+  var context = cache.table;
+  var iswin = cache.iswin;
 
-  if(cache.isWin === 1) return; // 结束战斗
+  if(iswin === 1) return; // 结束战斗
   else {
     if(flag === 1) {
       // 画黑子
-      context.drawImage(black, x*40+20, y*40+20);
+      context.drawImage(cache.black, x*40+20, y*40+20);
     } else if(flag === 2) {
       // 画白子
-      context.drawImage(white, x*40+20, y*40+20);
+      context.drawImage(cache.white, x*40+20, y*40+20);
     }
   } 
 }

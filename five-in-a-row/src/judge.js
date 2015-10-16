@@ -1,9 +1,7 @@
 /* 判断输赢 */
 /* flag为1表示黑字，flag为2表示白子 */
 module.exports = function(flag, x, y) {
-  window.cache = window.cache || {};
-  var data = window.cache.data;
-  var chessValue = data.chessValue;
+  var chessValue = window.cache.chessValue;
   var count1 = count2 = count3 = count4 = 0; //分别表示横向，竖向，正对角线，反对角线方向棋子个数
   
   var i = j = 0;
