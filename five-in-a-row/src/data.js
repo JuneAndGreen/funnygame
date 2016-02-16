@@ -12,29 +12,6 @@ module.exports = (function() {
 			window.cache.chessValue[i][j] = 0;
 		}
 	}
-	// 15*15的二维数组用来存储AI选择下子位置的价值缓冲区
-	window.cache.money = new Array(15);
-	for(var i=0; i<15; i++) {
-		window.cache.money[i] = new Array(15);
-		for(var j=0; j<15; j++) {
-			window.cache.money[i][j] = 0;
-		}
-	}
-	// 15*15的二维数组用来存储AI选择下子位置的价值缓冲区
-	window.cache.bm = new Array(15);
-	for(var i=0; i<15; i++) {
-		window.cache.bm[i] = new Array(15);
-		for(var j=0; j<15; j++) {
-			window.cache.bm[i][j] = 0;
-		}
-	}
-	window.cache.bm2 = new Array(15);
-	for(var i=0; i<15; i++) {
-		window.cache.bm2[i] = new Array(15);
-		for(var j=0; j<15; j++) {
-			window.cache.bm2[i][j] = 0;
-		}
-	}
 	// 棋子图片
 	window.cache.black = new Image();
 	window.cache.white = new Image();

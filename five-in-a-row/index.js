@@ -47,11 +47,11 @@
 	var initData = __webpack_require__(1);
 	var draw = __webpack_require__(2);
 	var judge = __webpack_require__(3);
-	var calcMoney = __webpack_require__(4);
-	var chooseWhere = __webpack_require__(5);
+	var chooseWhere = __webpack_require__(4);
 
 	draw.paintTable();
 	(function() {
+	  // 此处是为了获取棋盘居中时的偏移量
 	  var canvas = window.cache.canvas;
 	  window.cache.offsetX = canvas.offsetLeft - (canvas.clientWidth/2);
 	})();
@@ -61,9 +61,6 @@
 
 	  var cache = window.cache;
 	  var chessValue = cache.chessValue;
-	  var money = cache.money;
-	  var bm = cache.bm;
-	  var bm2 = cache.bm2;
 
 	  var x=parseInt((event.pageX - 20 - cache.offsetX)/40);
 	  var y=parseInt((event.pageY - 20)/40);
@@ -89,35 +86,6 @@
 	        cache.iswin = 1;
 	        alert("平局！");
 	      }
-
-	      // 已下子的位置权值设为-1
-	      money[x][y] = -1;
-	      // 给所有点重新计算权值
-	      for(var i =1;i<=4;i++) {
-	        if(x-i>=0 && x-i<=14 && y>=0 && y<=14)
-	          bm[x-i][y]=calcMoney(x-i,y);
-
-	        if(x+i>=0 && x+i<=14 && y>=0 && y<=14)
-	          bm[x+i][y]=calcMoney(x+i,y);
-
-	        if(x>=0 && x<=14 && y-i>=0 && y-i<=14)
-	          bm[x][y-i]=calcMoney(x,y-i);
-
-	        if(x>=0 && x<=14 && y+i>=0 && y+i<=14)
-	          bm[x][y+i]=calcMoney(x,y+i);
-
-	        if(x-i>=0&&x-i<=14&&y-i>=0 && y-i<=14)
-	          bm[x-i][y-i]=calcMoney(x-i,y-i);
-
-	        if(x+i>=0 && x+i<=14 && y+i>=0 && y+i<=14)
-	          bm[x+i][y+i]=calcMoney(x+i,y+i);
-
-	        if(x-i>=0 && x-i<=14 && y+i>=0 && y+i<=14)
-	          bm[x-i][y+i]=calcMoney(x-i,y+i);
-
-	        if(x+i>=0 && x+i<=14 && y-i>=0 && y-i<=14)
-	          bm[x+i][y-i]=calcMoney(x+i,y-i);
-	      }
 	      
 	      chooseWhere();
 	    }
@@ -140,29 +108,6 @@
 			window.cache.chessValue[i] = new Array(15);
 			for(var j=0; j<15; j++) {
 				window.cache.chessValue[i][j] = 0;
-			}
-		}
-		// 15*15的二维数组用来存储AI选择下子位置的价值缓冲区
-		window.cache.money = new Array(15);
-		for(var i=0; i<15; i++) {
-			window.cache.money[i] = new Array(15);
-			for(var j=0; j<15; j++) {
-				window.cache.money[i][j] = 0;
-			}
-		}
-		// 15*15的二维数组用来存储AI选择下子位置的价值缓冲区
-		window.cache.bm = new Array(15);
-		for(var i=0; i<15; i++) {
-			window.cache.bm[i] = new Array(15);
-			for(var j=0; j<15; j++) {
-				window.cache.bm[i][j] = 0;
-			}
-		}
-		window.cache.bm2 = new Array(15);
-		for(var i=0; i<15; i++) {
-			window.cache.bm2[i] = new Array(15);
-			for(var j=0; j<15; j++) {
-				window.cache.bm2[i][j] = 0;
 			}
 		}
 		// 棋子图片
@@ -307,6 +252,129 @@
 
 /***/ },
 /* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var calcMoney = __webpack_require__(5);
+	var judgeWin = __webpack_require__(3);
+	var draw = __webpack_require__(2);
+	var calc = {};
+
+	/* ai选择位置并落子 */
+	module.exports = (function() {
+		var cache = window.cache;
+		var chessValue = cache.chessValue;
+
+		/* 求棋盘最高分 */
+		var calculmaxvalue = function() {
+			var maxvalue = [0, 0, 0]; // 分别表示价值，坐标x，坐标y
+
+			for(var i=0; i<15; i++)
+				for(var j=0; j<15; j++)
+					maxvalue[0] += calcMoney(i, j);
+
+			return maxvalue;
+		}
+		/* 分别表示递归终止标志(搜索博弈树层数)，落子为谁，α值和β值 */
+		/* 目前仅遍历三层，根节点（第一层） ----> AI白子下（第二层） ----> 玩家黑子下（第三层）*/
+		var seapo = function(flag, chess, aa, bb) {
+			var i = 0, j = 0;
+			var buff; // 分别表示价值，坐标x，坐标y
+			var fin = [-1, 0, 0];
+			// 用于存储同层级的α和β值
+			var atmp = aa;
+			var btmp = bb;
+			
+			if(flag === 2) return calculmaxvalue(); // 到达叶子结点，计算棋盘权值
+			
+			for(i=0; i<15; i++) {
+				for(j=0; j<15; j++) {
+					if(chessValue[i][j]) continue; // 此处已有棋子
+					if(chess === 1) {
+						// 此时轮到黑子下
+
+						var thisMoney = calcMoney(i, j);
+						if(thisMoney === 0) continue; // 此处无价值可言
+
+						chessValue[i][j] = 1; // 假设在此位置落黑子
+						buff = seapo(flag+1, 2, atmp, btmp); // 遍历下一层
+						chessValue[i][j] = 0; // 恢复为未落子的状态
+
+						if(buff[0] <= aa) {
+							// α剪枝
+							return buff;
+						}
+						if(buff[0] < btmp) {
+							// 重新设置β值
+							btmp = buff[0];
+							fin[0] = buff[0];
+							fin[1] = i;
+							fin[2] = j;
+						}
+					} else if(chess === 2) {
+						// 此时轮到白子下
+
+						var thisMoney = calcMoney(i, j);
+						if(thisMoney === 0) continue; // 此处无价值可言
+						if(thisMoney >= 99999 || thisMoney <= -50000) {
+							// 当此处为必须落子的点（自己在此落子即赢或对方在此落子即输）
+							fin[0] = 99999;
+							fin[1] = i;
+							fin[2] = j;
+							return fin
+						}
+
+						chessValue[i][j] = 2; // 假设在此位置落白子
+						buff = seapo(flag+1, 1, atmp, btmp); // 遍历下一层
+						chessValue[i][j] = 0; // 恢复为未落子的状态
+						
+						if(buff[0] >= bb) {
+							// β剪枝
+							return buff;
+						}
+						if(buff[0] > atmp) {
+							// 重新设置α值
+							atmp = buff[0];
+							fin[0] = buff[0];
+							fin[1] = i;
+							fin[2] = j;
+						}
+					}
+				}
+			}
+			return fin;
+		}
+
+		return function() {
+			var value=[-1,0,0]; // 分别表示价值，坐标x，坐标y和距离
+			var leng = 0;
+			var x,y;
+			var winjudge;
+			
+			if(cache.iswin==1) return;
+			
+			value = seapo(0, 2, -1000000, 1000000);
+			x = value[1];
+			y = value[2];
+			
+			cache.isblack = true;
+
+			draw.drawChess(2, x, y);
+			chessValue[x][y] = 2;
+
+			// 判断输赢
+			winjudge= judgeWin(2, x, y);
+			if(winjudge==2) {
+				cache.iswin = 1;
+				alert("白子赢!");
+			} else if(winjudge === 3) {
+				cache.iswin = 1;
+				alert("平局！");
+			}
+		};
+	})();
+
+/***/ },
+/* 5 */
 /***/ function(module, exports) {
 
 	/* 给棋盘坐标x，y的位置赋值，作为ai下子的参考,flag为1表示刚下黑子，flag为2表示刚下白子 */
@@ -976,186 +1044,6 @@
 		
 		return value;
 	}
-
-/***/ },
-/* 5 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var calcMoney = __webpack_require__(4);
-	var judgeWin = __webpack_require__(3);
-	var draw = __webpack_require__(2);
-	var calc = {};
-
-	/* ai选择位置并落子 */
-	module.exports = (function() {
-		var cache = window.cache;
-		var chessValue = cache.chessValue;
-		var bm = cache.bm;
-		var bm2 = cache.bm2;
-		var money = cache.money;
-		/* 求棋盘最高分 */
-		var calculmaxvalue = function() {
-			var maxvalue = [0, 0, 0]; // 分别表示价值，坐标x，坐标y
-			for(var i =0; i<15; i++)
-				for(var j=0;j<15;j++)
-					money[i][j] = calcMoney(i, j);
-
-			for(var i=0; i<15; i++)
-				for(var j=0; j<15; j++)
-					maxvalue[0] += money[i][j];
-
-			return maxvalue;
-		}
-		/* 分别表示递归终止标志，落子为谁，α值和β值 */
-		var seapo = function(flag, chess, aa, bb) {
-			var i = 0, j = 0;
-			var flagtmp = flag;
-			var chessfan;
-			var score = 0;
-			var buff = [-1, 0, 0];//分别表示价值，坐标x，坐标y
-			var fin = [-1, 0, 0];
-			var atmp = aa;
-			var btmp = bb;
-			
-			var winjd;
-			
-			if(flag === 2) return calculmaxvalue();
-			
-			for(i=0; i<15; i++) {
-				for(j=0; j<15; j++) {
-					if(chessValue[i][j]) continue;
-					if(chess === 1) {
-						// 此时轮到黑子下
-						if(bm2[i][j] === 0) continue;
-						chessValue[i][j] = 1;
-						buff = seapo(flagtmp+1, 2, atmp, btmp);
-
-						if(buff[0] <= atmp) {
-							// α剪枝
-							chessValue[i][j] = 0;
-							return buff;
-						}
-						if(buff[0] < btmp) {
-							btmp = buff[0];
-							fin[0] = buff[0];
-							fin[1] = i;
-							fin[2] = j;
-						}
-						chessValue[i][j] = 0;
-					} else if(chess === 2) {
-						// 此时轮到白子下
-						if(bm[i][j]==0) continue;
-						chessValue[i][j] = 2;
-						if(bm[i][j] >= 99999 || bm[i][j] <= -50000) {
-							chessValue[i][j] = 0;
-							fin[0] = 99999;
-							fin[1] = i;
-							fin[2] = j;
-							return fin
-						}
-						revalue(i, j);
-						buff = seapo(flagtmp+1, 1, atmp, btmp);
-						
-						if(buff[0] > atmp) {
-							atmp = buff[0];
-							fin[0] = buff[0];
-							fin[1] = i;
-							fin[2] = j;
-						}
-						chessValue[i][j] = 0;
-					}
-				}
-			}
-			return fin;
-		}
-			
-		var revalue = function(x, y) {
-			for(var i=0; i<15; i++)
-				for(var j=0; j<15; j++)
-					bm2[i][j] = bm[i][j];
-			
-			for(var i=1; i<=4; i++)	{
-				if(x-i>=0 && x-i<=14 && y>=0 && y<=14)
-					bm2[x-i][y] = calcMoney(x-i, y);
-
-				if(x+i>=0 && x+i<=14 && y>=0 && y<=14)
-					bm2[x+i][y] = calcMoney(x+i, y);
-
-				if(x>=0 && x<=14 && y-i>=0 && y-i<=14)
-					bm2[x][y-i] = calcMoney(x, y-i);
-
-				if(x>=0 && x<=14 && y+i>=0 && y+i<=14)
-					bm2[x][y+i] = calcMoney(x, y+i);
-
-				if(x-i>=0 && x-i<=14 && y-i>=0 && y-i<=14)
-					bm2[x-i][y-i] = calcMoney(x-i, y-i);
-
-				if(x+i>=0 && x+i<=14 && y+i>=0 && y+i<=14)
-					bm2[x+i][y+i] = calcMoney(x+i, y+i);
-
-				if(x-i>=0 && x-i<=14 && y+i>=0 && y+i<=14)
-					bm2[x-i][y+i] = calcMoney(x-i, y+i);
-
-				if(x+i>=0 && x+i<=14 && y-i>=0 && y-i<=14)
-					bm2[x+i][y-i] = calcMoney(x+i, y-i);
-			}
-		}
-
-		return function() {
-			var value=[-1,0,0];//分别表示价值，坐标x，坐标y和距离
-			var leng = 0;
-			var x,y;
-			var winjudge;
-			
-			if(cache.iswin==1) return;
-			
-			value = seapo(0, 2, -1000000, 1000000);
-			x = value[1];
-			y = value[2];
-			
-			cache.isblack = true;
-
-			draw.drawChess(2, x, y);
-			chessValue[x][y] = 2;
-
-			// 判断输赢
-			winjudge= judgeWin(2, x, y);
-			if(winjudge==2) {
-				cache.iswin = 1;
-				alert("白子赢!");
-			} else if(winjudge === 3) {
-				cache.iswin = 1;
-				alert("平局！");
-			}
-			money[x][y] = -1;
-			
-			for(var i =1; i<=4; i++) {
-				if(x-i>=0 && x-i<=14 && y>=0 && y<=14)
-					bm[x-i][y] = calcMoney(x-i, y);
-
-				if(x+i>=0 && x+i<=14 && y>=0 && y<=14)
-					bm[x+i][y] = calcMoney(x+i, y);
-
-				if(x>=0 && x<=14 && y-i>=0 && y-i<=14)
-					bm[x][y-i] = calcMoney(x, y-i);
-
-				if(x>=0 && x<=14 && y+i>=0 && y+i<=14)
-					bm[x][y+i] = calcMoney(x, y+i);
-
-				if(x-i>=0 && x-i<=14 && y-i>=0 && y-i<=14)
-					bm[x-i][y-i] = calcMoney(x-i, y-i);
-
-				if(x+i>=0 && x+i<=14 && y+i>=0 && y+i<=14)
-					bm[x+i][y+i] = calcMoney(x+i, y+i);
-
-				if(x-i>=0 && x-i<=14 && y+i>=0 && y+i<=14)
-					bm[x-i][y+i] = calcMoney(x-i, y+i);
-
-				if(x+i>=0 && x+i<=14 && y-i>=0 && y-i<=14)
-					bm[x+i][y-i] = calcMoney(x+i, y-i);
-			}
-		};
-	})();
 
 /***/ }
 /******/ ]);

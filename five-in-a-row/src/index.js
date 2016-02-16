@@ -1,11 +1,11 @@
 var initData = require('./data.js');
 var draw = require('./draw.js');
 var judge = require('./judge.js');
-var calcMoney = require('./money.js');
 var chooseWhere = require('./calc.js');
 
 draw.paintTable();
 (function() {
+  // 此处是为了获取棋盘居中时的偏移量
   var canvas = window.cache.canvas;
   window.cache.offsetX = canvas.offsetLeft - (canvas.clientWidth/2);
 })();
@@ -15,9 +15,6 @@ window.cache.canvas.onmousedown = function(event) {
 
   var cache = window.cache;
   var chessValue = cache.chessValue;
-  var money = cache.money;
-  var bm = cache.bm;
-  var bm2 = cache.bm2;
 
   var x=parseInt((event.pageX - 20 - cache.offsetX)/40);
   var y=parseInt((event.pageY - 20)/40);
@@ -42,35 +39,6 @@ window.cache.canvas.onmousedown = function(event) {
       } else if(winjudge === 3) {
         cache.iswin = 1;
         alert("平局！");
-      }
-
-      // 已下子的位置权值设为-1
-      money[x][y] = -1;
-      // 给所有点重新计算权值
-      for(var i =1;i<=4;i++) {
-        if(x-i>=0 && x-i<=14 && y>=0 && y<=14)
-          bm[x-i][y]=calcMoney(x-i,y);
-
-        if(x+i>=0 && x+i<=14 && y>=0 && y<=14)
-          bm[x+i][y]=calcMoney(x+i,y);
-
-        if(x>=0 && x<=14 && y-i>=0 && y-i<=14)
-          bm[x][y-i]=calcMoney(x,y-i);
-
-        if(x>=0 && x<=14 && y+i>=0 && y+i<=14)
-          bm[x][y+i]=calcMoney(x,y+i);
-
-        if(x-i>=0&&x-i<=14&&y-i>=0 && y-i<=14)
-          bm[x-i][y-i]=calcMoney(x-i,y-i);
-
-        if(x+i>=0 && x+i<=14 && y+i>=0 && y+i<=14)
-          bm[x+i][y+i]=calcMoney(x+i,y+i);
-
-        if(x-i>=0 && x-i<=14 && y+i>=0 && y+i<=14)
-          bm[x-i][y+i]=calcMoney(x-i,y+i);
-
-        if(x+i>=0 && x+i<=14 && y-i>=0 && y-i<=14)
-          bm[x+i][y-i]=calcMoney(x+i,y-i);
       }
       
       chooseWhere();
